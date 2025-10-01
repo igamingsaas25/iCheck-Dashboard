@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../../components/ui/Header';
 import GlobalFilterBar from '../../components/ui/GlobalFilterBar';
 import AlertNotificationCenter from '../../components/ui/AlertNotificationCenter';
@@ -11,22 +11,88 @@ import AdvancedFilterPanel from './components/AdvancedFilterPanel';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 
+// This function simulates a real API call to fetch all data for this dashboard
+const fetchPlayerAnalyticsData = async (filters) => {
+    // In a real application, this would be an actual fetch call:
+    // const response = await fetch(`/api/player-analytics?filters=${JSON.stringify(filters)}`);
+    // const data = await response.json();
+    // return data;
+
+    // For demonstration, we simulate the API response with mock data.
+    return {
+        playerMetrics: {
+            acquisition: { value: 2847, change: '+12.3%' },
+            retention: { value: 0.684, change: '+2.1%' },
+            avgSession: { value: '24.6m', change: '-1.2m' },
+            ltv: { value: 487.20, change: '+$23.40' }
+        },
+        journeyFunnel: {
+            funnel: [
+                { name: 'Registration', value: 10000, fill: '#3B82F6', percentage: 100, description: 'New player signups' },
+                { name: 'First Deposit', value: 6800, fill: '#8B5CF6', percentage: 68, description: 'Made initial deposit' },
+                { name: 'Active Player', value: 4500, fill: '#10B981', percentage: 45, description: '7+ days activity' }
+            ],
+            cohort: [
+                { week: 'Week 1', retention: 100, players: 1000 },
+                { week: 'Week 4', retention: 45, players: 450 },
+                { week: 'Week 12', retention: 28, players: 280 }
+            ]
+        },
+        distribution: {
+            geographic: [
+                { region: 'North America', players: 12847, percentage: 35.2, growth: '+8.3%', color: '#3B82F6' },
+                { region: 'Europe', players: 9632, percentage: 26.4, growth: '+12.1%', color: '#8B5CF6' }
+            ],
+            timezone: [
+                { timezone: 'UTC-8 (PST)', players: 8945, peak: '8:00 PM', activity: 92 },
+                { timezone: 'UTC+0 (GMT)', players: 6421, peak: '10:00 PM', activity: 85 }
+            ]
+        },
+        engagement: {
+            bubble: [
+                { gameType: 'Slots', engagement: 85, revenue: 450, playerCount: 12500, avgSession: 28, demographics: 'Mixed Age Groups', color: '#3B82F6' },
+                { gameType: 'Poker', engagement: 78, revenue: 520, playerCount: 4500, avgSession: 45, demographics: '30-50 Years', color: '#F59E0B' }
+            ],
+            heatmap: [
+                { ageGroup: '18-25', slots: 90, blackjack: 45, sports: 95 },
+                { ageGroup: '36-45', slots: 80, blackjack: 85, sports: 75 }
+            ]
+        }
+    };
+};
+
 const PlayerAnalyticsBehaviorDashboard = () => {
   const [globalFilters, setGlobalFilters] = useState({});
   const [advancedFilters, setAdvancedFilters] = useState({});
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const getData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+        const data = await fetchPlayerAnalyticsData({ ...globalFilters, ...advancedFilters });
+        setDashboardData(data);
+        setLastUpdated(new Date());
+    } catch (error) {
+        console.error("Failed to fetch player analytics data:", error);
+    } finally {
+        setIsLoading(false);
+    }
+  }, [globalFilters, advancedFilters]);
+
+  useEffect(() => {
+    getData();
+  }, [getData]);
 
   // Auto-refresh data every 30 minutes
   useEffect(() => {
     if (isAutoRefresh) {
-      const interval = setInterval(() => {
-        setLastUpdated(new Date());
-      }, 30 * 60 * 1000); // 30 minutes
-
+      const interval = setInterval(getData, 30 * 60 * 1000); // 30 minutes
       return () => clearInterval(interval);
     }
-  }, [isAutoRefresh]);
+  }, [isAutoRefresh, getData]);
 
   const handleGlobalFiltersChange = (filters) => {
     setGlobalFilters(filters);
@@ -37,7 +103,7 @@ const PlayerAnalyticsBehaviorDashboard = () => {
   };
 
   const refreshData = () => {
-    setLastUpdated(new Date());
+    getData();
   };
 
   return (
@@ -122,24 +188,24 @@ const PlayerAnalyticsBehaviorDashboard = () => {
         </div>
 
         {/* Primary Metrics Strip */}
-        <PlayerMetricsStrip filters={{ ...globalFilters, ...advancedFilters }} />
+        <PlayerMetricsStrip data={dashboardData?.playerMetrics} />
 
         {/* Main Analytics Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
           {/* Player Journey Funnel - Main Content (8 cols) */}
           <div className="xl:col-span-8">
-            <PlayerJourneyFunnel filters={{ ...globalFilters, ...advancedFilters }} />
+            <PlayerJourneyFunnel data={dashboardData?.journeyFunnel} />
           </div>
 
           {/* Player Distribution Heatmap - Right Panel (4 cols) */}
           <div className="xl:col-span-4">
-            <PlayerDistributionHeatmap filters={{ ...globalFilters, ...advancedFilters }} />
+            <PlayerDistributionHeatmap data={dashboardData?.distribution} />
           </div>
         </div>
 
         {/* Full-Width Engagement Matrix */}
         <div className="mb-6">
-          <EngagementMatrix filters={{ ...globalFilters, ...advancedFilters }} />
+          <EngagementMatrix data={dashboardData?.engagement} />
         </div>
 
         {/* Additional Insights Grid */}

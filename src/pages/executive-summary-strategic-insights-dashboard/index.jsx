@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../../components/ui/Header';
 import GlobalFilterBar from '../../components/ui/GlobalFilterBar';
 import AlertNotificationCenter from '../../components/ui/AlertNotificationCenter';
@@ -11,41 +11,82 @@ import PredictiveAnalyticsOverlay from './components/PredictiveAnalyticsOverlay'
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 
+// This function simulates a real API call to fetch all data for this dashboard
+const fetchExecutiveData = async (filters) => {
+    // In a real application, this would be an actual fetch call:
+    // const response = await fetch(`/api/executive-summary?filters=${JSON.stringify(filters)}`);
+    // const data = await response.json();
+    // return data;
+
+    // For demonstration, we simulate the API response with mock data.
+    return {
+        businessHealth: {
+            totalRevenue: { value: 47200000, change: 12.3 },
+            playerGrowthRate: { value: 0.187, change: 3.2 },
+            marketShare: { value: 0.234, change: 1.8 },
+            operationalEfficiency: { value: 0.942, change: -0.5 }
+        },
+        strategicPerformance: {
+            quarterly: [
+                { period: 'Q1 2024', revenue: 42.5, playerAcquisitionCost: 28.3, profitMargin: 24.2, marketShare: 21.8 },
+                { period: 'Q2 2024', revenue: 45.8, playerAcquisitionCost: 26.7, profitMargin: 26.1, marketShare: 22.4 },
+                { period: 'Q3 2024', revenue: 47.2, playerAcquisitionCost: 25.1, profitMargin: 28.3, marketShare: 23.4 },
+                { period: 'Q4 2024', revenue: 49.8, playerAcquisitionCost: 24.2, profitMargin: 29.7, marketShare: 24.1 }
+            ],
+            annual: [
+                { period: '2021', revenue: 156.2, playerAcquisitionCost: 32.1, profitMargin: 18.5, marketShare: 18.2 },
+                { period: '2022', revenue: 168.7, playerAcquisitionCost: 30.8, profitMargin: 21.3, marketShare: 19.8 },
+                { period: '2023', revenue: 181.3, playerAcquisitionCost: 28.9, profitMargin: 23.7, marketShare: 21.5 },
+                { period: '2024', revenue: 190.1, playerAcquisitionCost: 26.1, profitMargin: 27.1, marketShare: 22.9 }
+            ]
+        },
+        businessScorecard: [
+            { id: 'operations', name: 'Operations', icon: 'Settings', kpis: [{ name: 'System Uptime', value: '99.7%', target: '99.5%', status: 'green', trend: 'stable' }, { name: 'Response Time', value: '1.2s', target: '<2s', status: 'green', trend: 'improving' }] },
+            { id: 'finance', name: 'Finance', icon: 'DollarSign', kpis: [{ name: 'Revenue Growth', value: '12.3%', target: '10%', status: 'green', trend: 'improving' }, { name: 'Profit Margin', value: '28.3%', target: '25%', status: 'green', trend: 'improving' }] }
+        ],
+        predictiveAnalytics: {
+            historical: [
+                { period: 'Jan 2024', revenue: 42.5, players: 1.8, marketShare: 21.2 },
+                { period: 'Mar 2024', revenue: 45.2, players: 2.0, marketShare: 22.1 },
+                { period: 'Jun 2024', revenue: 47.8, players: 2.1, marketShare: 23.4 }
+            ],
+            forecast: [
+                { period: 'Sep 2024', revenue: 50.1, players: 2.3, marketShare: 24.5, forecast: true },
+                { period: 'Dec 2024', revenue: 52.5, players: 2.5, marketShare: 25.6, forecast: true }
+            ]
+        }
+    };
+};
+
 const ExecutiveSummaryStrategicInsightsDashboard = () => {
   const [filters, setFilters] = useState({});
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+
+  const getData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+        const data = await fetchExecutiveData(filters);
+        setDashboardData(data);
+        setLastUpdated(new Date());
+    } catch (error) {
+        console.error("Failed to fetch executive summary data:", error);
+    } finally {
+        setIsLoading(false);
+    }
+  }, [filters]);
 
   useEffect(() => {
-    // Simulate initial data loading
-    const loadData = async () => {
-      setIsLoading(true);
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setIsLoading(false);
-    };
-
-    loadData();
-
-    // Set up hourly updates
-    const updateInterval = setInterval(() => {
-      setLastUpdated(new Date());
-    }, 3600000); // 1 hour
-
-    return () => clearInterval(updateInterval);
-  }, []);
+    getData();
+  }, [getData]);
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
-    setLastUpdated(new Date());
   };
 
-  const handleRefresh = async () => {
-    setIsLoading(true);
-    // Simulate data refresh
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setLastUpdated(new Date());
-    setIsLoading(false);
+  const handleRefresh = () => {
+    getData();
   };
 
   const handlePrintView = () => {
@@ -149,14 +190,14 @@ const ExecutiveSummaryStrategicInsightsDashboard = () => {
               <Icon name="Activity" size={20} className="text-primary" />
               <h2 className="text-lg font-semibold text-foreground">Business Health Overview</h2>
             </div>
-            <BusinessHealthIndicators />
+            <BusinessHealthIndicators data={dashboardData?.businessHealth} />
           </section>
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
             {/* Strategic Performance Chart - 8 columns */}
             <div className="xl:col-span-8">
-              <StrategicPerformanceChart />
+              <StrategicPerformanceChart data={dashboardData?.strategicPerformance} />
             </div>
             
             {/* Market Positioning Metrics - 4 columns */}
@@ -167,12 +208,12 @@ const ExecutiveSummaryStrategicInsightsDashboard = () => {
 
           {/* Business Scorecard - Full Width */}
           <section className="mb-8">
-            <BusinessScorecard />
+            <BusinessScorecard data={dashboardData?.businessScorecard} />
           </section>
 
           {/* Predictive Analytics Overlay */}
           <section className="mb-8">
-            <PredictiveAnalyticsOverlay />
+            <PredictiveAnalyticsOverlay data={dashboardData?.predictiveAnalytics} />
           </section>
 
           {/* Executive Summary Footer */}

@@ -2,68 +2,18 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const AlertFeed = ({ className = '' }) => {
-  const [alerts, setAlerts] = useState([]);
+const AlertFeed = ({ initialAlerts, className = '' }) => {
+  const [alerts, setAlerts] = useState(initialAlerts || []);
   const [filter, setFilter] = useState('all');
 
-  // Mock real-time alerts
-  const mockAlerts = [
-    {
-      id: 1,
-      type: 'critical',
-      title: 'High Server Load',
-      message: 'Server CPU usage exceeded 90% threshold',
-      timestamp: new Date(Date.now() - 2 * 60 * 1000),
-      source: 'System Monitor',
-      acknowledged: false,
-      actions: ['Scale Up', 'Investigate']
-    },
-    {
-      id: 2,
-      type: 'warning',
-      title: 'Payment Gateway Latency',
-      message: 'Average response time increased to 3.2s',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-      source: 'Payment System',
-      acknowledged: false,
-      actions: ['Check Status', 'Switch Provider']
-    },
-    {
-      id: 3,
-      type: 'info',
-      title: 'Peak Traffic Period',
-      message: 'Concurrent users reached 15,000 (80% capacity)',
-      timestamp: new Date(Date.now() - 8 * 60 * 1000),
-      source: 'Traffic Monitor',
-      acknowledged: true,
-      actions: ['Monitor', 'Prepare Scale']
-    },
-    {
-      id: 4,
-      type: 'critical',
-      title: 'Fraud Detection Alert',
-      message: 'Suspicious betting pattern detected - Account #78432',
-      timestamp: new Date(Date.now() - 12 * 60 * 1000),
-      source: 'Risk Management',
-      acknowledged: false,
-      actions: ['Block Account', 'Review Activity']
-    },
-    {
-      id: 5,
-      type: 'warning',
-      title: 'Game Server Restart',
-      message: 'Poker Server #3 automatically restarted due to memory leak',
-      timestamp: new Date(Date.now() - 18 * 60 * 1000),
-      source: 'Game Engine',
-      acknowledged: true,
-      actions: ['Check Logs', 'Monitor Performance']
+  useEffect(() => {
+    if (initialAlerts) {
+      setAlerts(initialAlerts);
     }
-  ];
+  }, [initialAlerts]);
 
   useEffect(() => {
-    setAlerts(mockAlerts);
-    
-    // Simulate new alerts
+    // Simulate new alerts arriving in a live environment
     const interval = setInterval(() => {
       const alertTypes = ['critical', 'warning', 'info'];
       const sources = ['System Monitor', 'Payment System', 'Game Engine', 'Risk Management'];
@@ -77,16 +27,16 @@ const AlertFeed = ({ className = '' }) => {
       
       const newAlert = {
         id: Date.now(),
-        type: alertTypes?.[Math.floor(Math.random() * alertTypes?.length)],
+        type: alertTypes[Math.floor(Math.random() * alertTypes.length)],
         title: 'System Alert',
-        message: messages?.[Math.floor(Math.random() * messages?.length)],
+        message: messages[Math.floor(Math.random() * messages.length)],
         timestamp: new Date(),
-        source: sources?.[Math.floor(Math.random() * sources?.length)],
+        source: sources[Math.floor(Math.random() * sources.length)],
         acknowledged: false,
         actions: ['Investigate', 'Acknowledge']
       };
       
-      setAlerts(prev => [newAlert, ...prev?.slice(0, 19)]); // Keep last 20 alerts
+      setAlerts(prev => [newAlert, ...prev.slice(0, 19)]); // Keep last 20 alerts
     }, 15000);
     
     return () => clearInterval(interval);

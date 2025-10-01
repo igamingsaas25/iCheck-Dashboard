@@ -2,77 +2,10 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const BusinessScorecard = () => {
+const BusinessScorecard = ({ data }) => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
 
-  const departments = [
-    {
-      id: 'operations',
-      name: 'Operations',
-      icon: 'Settings',
-      kpis: [
-        { name: 'System Uptime', value: '99.7%', target: '99.5%', status: 'green', trend: 'stable' },
-        { name: 'Response Time', value: '1.2s', target: '<2s', status: 'green', trend: 'improving' },
-        { name: 'Error Rate', value: '0.03%', target: '<0.1%', status: 'green', trend: 'stable' },
-        { name: 'Capacity Utilization', value: '78%', target: '<85%', status: 'green', trend: 'stable' }
-      ]
-    },
-    {
-      id: 'finance',
-      name: 'Finance',
-      icon: 'DollarSign',
-      kpis: [
-        { name: 'Revenue Growth', value: '12.3%', target: '10%', status: 'green', trend: 'improving' },
-        { name: 'Profit Margin', value: '28.3%', target: '25%', status: 'green', trend: 'improving' },
-        { name: 'Cost per Acquisition', value: '$24.2', target: '<$30', status: 'green', trend: 'improving' },
-        { name: 'Cash Flow', value: 'Positive', target: 'Positive', status: 'green', trend: 'stable' }
-      ]
-    },
-    {
-      id: 'marketing',
-      name: 'Marketing',
-      icon: 'Target',
-      kpis: [
-        { name: 'Player Acquisition', value: '18.7%', target: '15%', status: 'green', trend: 'improving' },
-        { name: 'Brand Awareness', value: '78%', target: '75%', status: 'green', trend: 'improving' },
-        { name: 'Campaign ROI', value: '340%', target: '300%', status: 'green', trend: 'stable' },
-        { name: 'Conversion Rate', value: '3.2%', target: '2.5%', status: 'green', trend: 'improving' }
-      ]
-    },
-    {
-      id: 'customer',
-      name: 'Customer Experience',
-      icon: 'Users',
-      kpis: [
-        { name: 'Satisfaction Score', value: '4.6/5', target: '>4.0', status: 'green', trend: 'improving' },
-        { name: 'Retention Rate', value: '84%', target: '>80%', status: 'green', trend: 'stable' },
-        { name: 'Support Response', value: '2.3h', target: '<4h', status: 'green', trend: 'improving' },
-        { name: 'Churn Rate', value: '5.2%', target: '<8%', status: 'green', trend: 'improving' }
-      ]
-    },
-    {
-      id: 'risk',
-      name: 'Risk Management',
-      icon: 'Shield',
-      kpis: [
-        { name: 'Fraud Detection', value: '99.8%', target: '>99%', status: 'green', trend: 'stable' },
-        { name: 'Compliance Score', value: '98%', target: '>95%', status: 'green', trend: 'stable' },
-        { name: 'Security Incidents', value: '0', target: '0', status: 'green', trend: 'stable' },
-        { name: 'Risk Exposure', value: 'Low', target: 'Low', status: 'amber', trend: 'monitoring' }
-      ]
-    },
-    {
-      id: 'technology',
-      name: 'Technology',
-      icon: 'Code',
-      kpis: [
-        { name: 'Platform Performance', value: '94.2%', target: '>90%', status: 'green', trend: 'stable' },
-        { name: 'API Reliability', value: '99.9%', target: '>99%', status: 'green', trend: 'stable' },
-        { name: 'Data Processing', value: '1.8s', target: '<3s', status: 'green', trend: 'improving' },
-        { name: 'Innovation Index', value: '7.8/10', target: '>7.0', status: 'green', trend: 'improving' }
-      ]
-    }
-  ];
+  const departments = data || [];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -132,20 +65,23 @@ const BusinessScorecard = () => {
 
   const filteredDepartments = selectedDepartment === 'all' 
     ? departments 
-    : departments?.filter(dept => dept?.id === selectedDepartment);
+    : departments.filter(dept => dept.id === selectedDepartment);
 
   const getOverallStatus = () => {
-    const allKpis = departments?.flatMap(dept => dept?.kpis);
-    const greenCount = allKpis?.filter(kpi => kpi?.status === 'green')?.length;
-    const amberCount = allKpis?.filter(kpi => kpi?.status === 'amber')?.length;
-    const redCount = allKpis?.filter(kpi => kpi?.status === 'red')?.length;
+    if (!departments || departments.length === 0) {
+        return { total: 0, green: 0, amber: 0, red: 0, percentage: 0 };
+    }
+    const allKpis = departments.flatMap(dept => dept.kpis);
+    const greenCount = allKpis.filter(kpi => kpi.status === 'green').length;
+    const amberCount = allKpis.filter(kpi => kpi.status === 'amber').length;
+    const redCount = allKpis.filter(kpi => kpi.status === 'red').length;
     
     return {
-      total: allKpis?.length,
+      total: allKpis.length,
       green: greenCount,
       amber: amberCount,
       red: redCount,
-      percentage: Math.round((greenCount / allKpis?.length) * 100)
+      percentage: Math.round((greenCount / allKpis.length) * 100)
     };
   };
 

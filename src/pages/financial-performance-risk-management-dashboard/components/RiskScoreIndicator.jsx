@@ -1,11 +1,11 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 
-const RiskScoreIndicator = ({ score, trend, factors, lastUpdated }) => {
-  const getRiskLevel = (score) => {
-    if (score >= 80) return { level: 'Critical', color: 'text-critical', bgColor: 'bg-critical/10', borderColor: 'border-critical' };
-    if (score >= 60) return { level: 'High', color: 'text-high', bgColor: 'bg-high/10', borderColor: 'border-high' };
-    if (score >= 40) return { level: 'Medium', color: 'text-medium', bgColor: 'bg-medium/10', borderColor: 'border-medium' };
+const RiskScoreIndicator = ({ score = 0, trend = 0, factors = [], lastUpdated }) => {
+  const getRiskLevel = (s) => {
+    if (s >= 80) return { level: 'Critical', color: 'text-critical', bgColor: 'bg-critical/10', borderColor: 'border-critical' };
+    if (s >= 60) return { level: 'High', color: 'text-high', bgColor: 'bg-high/10', borderColor: 'border-high' };
+    if (s >= 40) return { level: 'Medium', color: 'text-medium', bgColor: 'bg-medium/10', borderColor: 'border-medium' };
     return { level: 'Low', color: 'text-low', bgColor: 'bg-low/10', borderColor: 'border-low' };
   };
 
@@ -55,7 +55,7 @@ const RiskScoreIndicator = ({ score, trend, factors, lastUpdated }) => {
               strokeWidth="8"
               fill="transparent"
               strokeDasharray={`${2 * Math.PI * 50}`}
-              strokeDashoffset={`${2 * Math.PI * 50 * (1 - score / 100)}`}
+              strokeDashoffset={`${2 * Math.PI * 50 * (1 - (score || 0) / 100)}`}
               className="transition-all duration-1000 ease-out"
               strokeLinecap="round"
             />
@@ -65,7 +65,7 @@ const RiskScoreIndicator = ({ score, trend, factors, lastUpdated }) => {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <div className={`text-3xl font-bold ${risk?.color} font-data`}>
-                {score}
+                {score || 0}
               </div>
               <div className="text-xs text-muted-foreground">/ 100</div>
             </div>
@@ -96,7 +96,7 @@ const RiskScoreIndicator = ({ score, trend, factors, lastUpdated }) => {
               size={16} 
             />
             <span className="text-sm font-medium">
-              {trend > 0 ? '+' : ''}{trend}% from last hour
+              {trend > 0 ? '+' : ''}{trend || 0}% from last hour
             </span>
           </div>
         </div>
@@ -104,28 +104,28 @@ const RiskScoreIndicator = ({ score, trend, factors, lastUpdated }) => {
       {/* Risk Factors */}
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-foreground">Contributing Factors</h4>
-        {factors?.map((factor, index) => (
+        {factors.map((factor, index) => (
           <div key={index} className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Icon 
-                name={factor?.icon} 
+                name={factor.icon}
                 size={16} 
-                className={factor?.impact === 'high' ? 'text-error' : factor?.impact === 'medium' ? 'text-warning' : 'text-muted-foreground'}
+                className={factor.impact === 'high' ? 'text-error' : factor.impact === 'medium' ? 'text-warning' : 'text-muted-foreground'}
               />
-              <span className="text-sm text-foreground">{factor?.name}</span>
+              <span className="text-sm text-foreground">{factor.name}</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-16 h-2 bg-muted/30 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full transition-all duration-300 ${
-                    factor?.impact === 'high' ? 'bg-error' : 
-                    factor?.impact === 'medium' ? 'bg-warning' : 'bg-success'
+                    factor.impact === 'high' ? 'bg-error' :
+                    factor.impact === 'medium' ? 'bg-warning' : 'bg-success'
                   }`}
-                  style={{ width: `${factor?.weight}%` }}
+                  style={{ width: `${factor.weight}%` }}
                 />
               </div>
               <span className="text-xs text-muted-foreground w-8 text-right">
-                {factor?.weight}%
+                {factor.weight}%
               </span>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../../components/ui/Header';
 import GlobalFilterBar from '../../components/ui/GlobalFilterBar';
 import AlertNotificationCenter from '../../components/ui/AlertNotificationCenter';
@@ -13,6 +13,49 @@ import Button from '../../components/ui/Button';
 import Select from '../../components/ui/Select';
 import Icon from '../../components/AppIcon';
 
+// This function simulates a real API call to fetch all data for this dashboard
+const fetchFinancialData = async (filters) => {
+    // In a real application, this would be an actual fetch call:
+    // const response = await fetch(`/api/financial-performance?filters=${JSON.stringify(filters)}`);
+    // const data = await response.json();
+    // return data;
+
+    // For demonstration, we simulate the API response with mock data.
+    return {
+        financialKPIs: [
+            { title: "Gross Gaming Revenue", value: 2847500, currency: filters?.currency, change: 12.5, changeType: "positive", icon: "TrendingUp", description: "Total revenue from gaming activities", trend: 78 },
+            { title: "Net Profit Margin", value: "23.4%", change: -2.1, changeType: "negative", icon: "Percent", description: "Profit after operational costs", trend: 65 },
+            { title: "Transaction Volume", value: 156789, change: 8.7, changeType: "positive", icon: "ArrowUpDown", description: "Total financial transactions", trend: 82 },
+            { title: "Risk Score", value: "42/100", change: -5.3, changeType: "positive", icon: "Shield", description: "Composite risk assessment", trend: 58 }
+        ],
+        revenueStreamData: [
+            { period: "00:00", slots: 450000, tableGames: 280000, liveCasino: 320000, riskScore: 35 },
+            { period: "08:00", slots: 520000, tableGames: 310000, liveCasino: 380000, riskScore: 42 },
+            { period: "16:00", slots: 750000, tableGames: 480000, liveCasino: 520000, riskScore: 45 },
+            { period: "20:00", slots: 820000, tableGames: 540000, liveCasino: 580000, riskScore: 52 }
+        ],
+        fraudAlerts: [
+            { id: 1, severity: 'critical', title: 'Suspicious Betting Pattern', description: 'Account #78432 showing unusual high-value betting patterns with rapid win/loss cycles', accountId: '#78432', timestamp: new Date(Date.now() - 5 * 60 * 1000) },
+            { id: 2, severity: 'high', title: 'Multiple Account Detection', description: 'Same device fingerprint detected across 5 different accounts', accountId: '#91256', timestamp: new Date(Date.now() - 12 * 60 * 1000) }
+        ],
+        riskScore: {
+            score: 42,
+            trend: -5.3,
+            factors: [
+                { name: 'Transaction Velocity', weight: 25, impact: 'high', icon: 'Zap' },
+                { name: 'Geographic Risk', weight: 20, impact: 'high', icon: 'MapPin' },
+                { name: 'Behavioral Patterns', weight: 22, impact: 'high', icon: 'Activity' }
+            ]
+        },
+        paymentMethodData: [
+            { method: 'Credit Card', volume: 1250000, count: 3456, percentage: 42.5, successRate: 97.8, avgAmount: 361, riskLevel: 'low', avgProcessingTime: '2.3s' },
+            { method: 'Bank Transfer', volume: 890000, count: 1234, percentage: 30.2, successRate: 94.2, avgAmount: 721, riskLevel: 'medium', avgProcessingTime: '4.7m' },
+            { method: 'E-Wallet', volume: 680000, count: 2345, percentage: 23.1, successRate: 99.1, avgAmount: 290, riskLevel: 'low', avgProcessingTime: '1.8s' }
+        ]
+    };
+};
+
+
 const FinancialPerformanceRiskManagementDashboard = () => {
   const [filters, setFilters] = useState({
     timeRange: '24h',
@@ -22,317 +65,43 @@ const FinancialPerformanceRiskManagementDashboard = () => {
   });
 
   const [refreshInterval, setRefreshInterval] = useState(60);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock financial KPI data
-  const financialKPIs = [
-    {
-      title: "Gross Gaming Revenue",
-      value: 2847500,
-      currency: filters?.currency,
-      change: 12.5,
-      changeType: "positive",
-      icon: "TrendingUp",
-      description: "Total revenue from gaming activities",
-      trend: 78
-    },
-    {
-      title: "Net Profit Margin",
-      value: "23.4%",
-      change: -2.1,
-      changeType: "negative",
-      icon: "Percent",
-      description: "Profit after operational costs",
-      trend: 65
-    },
-    {
-      title: "Transaction Volume",
-      value: 156789,
-      change: 8.7,
-      changeType: "positive",
-      icon: "ArrowUpDown",
-      description: "Total financial transactions",
-      trend: 82
-    },
-    {
-      title: "Risk Score",
-      value: "42/100",
-      change: -5.3,
-      changeType: "positive",
-      icon: "Shield",
-      description: "Composite risk assessment",
-      trend: 58
+  const getData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+        const data = await fetchFinancialData(filters);
+        setDashboardData(data);
+        setLastUpdated(new Date());
+    } catch (error) {
+        console.error("Failed to fetch financial data:", error);
+    } finally {
+        setIsLoading(false);
     }
-  ];
+  }, [filters]);
 
-  // Mock revenue stream data
-  const revenueStreamData = [
-    {
-      period: "00:00",
-      slots: 450000,
-      tableGames: 280000,
-      liveCasino: 320000,
-      riskScore: 35
-    },
-    {
-      period: "04:00",
-      slots: 380000,
-      tableGames: 240000,
-      liveCasino: 290000,
-      riskScore: 28
-    },
-    {
-      period: "08:00",
-      slots: 520000,
-      tableGames: 310000,
-      liveCasino: 380000,
-      riskScore: 42
-    },
-    {
-      period: "12:00",
-      slots: 680000,
-      tableGames: 420000,
-      liveCasino: 450000,
-      riskScore: 38
-    },
-    {
-      period: "16:00",
-      slots: 750000,
-      tableGames: 480000,
-      liveCasino: 520000,
-      riskScore: 45
-    },
-    {
-      period: "20:00",
-      slots: 820000,
-      tableGames: 540000,
-      liveCasino: 580000,
-      riskScore: 52
-    }
-  ];
-
-  // Mock fraud alerts data
-  const fraudAlerts = [
-    {
-      id: 1,
-      severity: 'critical',
-      title: 'Suspicious Betting Pattern',
-      description: 'Account #78432 showing unusual high-value betting patterns with rapid win/loss cycles',
-      accountId: '#78432',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000)
-    },
-    {
-      id: 2,
-      severity: 'high',
-      title: 'Multiple Account Detection',
-      description: 'Same device fingerprint detected across 5 different accounts with similar betting behavior',
-      accountId: '#91256',
-      timestamp: new Date(Date.now() - 12 * 60 * 1000)
-    },
-    {
-      id: 3,
-      severity: 'high',
-      title: 'Rapid Deposit/Withdrawal',
-      description: 'Account showing rapid deposit and withdrawal cycles within 30-minute windows',
-      accountId: '#45789',
-      timestamp: new Date(Date.now() - 18 * 60 * 1000)
-    },
-    {
-      id: 4,
-      severity: 'medium',
-      title: 'Geolocation Anomaly',
-      description: 'Account accessed from 3 different countries within 2 hours',
-      accountId: '#23456',
-      timestamp: new Date(Date.now() - 25 * 60 * 1000)
-    },
-    {
-      id: 5,
-      severity: 'medium',
-      title: 'Bonus Abuse Pattern',
-      description: 'Systematic bonus claiming pattern detected across multiple promotional offers',
-      accountId: '#67890',
-      timestamp: new Date(Date.now() - 35 * 60 * 1000)
-    },
-    {
-      id: 6,
-      severity: 'low',
-      title: 'Payment Method Switch',
-      description: 'Account switched payment methods 4 times in the last 24 hours',
-      accountId: '#34567',
-      timestamp: new Date(Date.now() - 45 * 60 * 1000)
-    }
-  ];
-
-  // Mock financial flow data
-  const financialFlowData = [
-    {
-      id: 1,
-      type: 'deposit',
-      method: 'Credit Card',
-      volume: 1250000,
-      count: 3456,
-      avgAmount: 361,
-      successRate: 97.8,
-      avgProcessingTime: '2.3s',
-      hasAnomaly: false,
-      anomalyDescription: null
-    },
-    {
-      id: 2,
-      type: 'withdrawal',
-      method: 'Bank Transfer',
-      volume: 890000,
-      count: 1234,
-      avgAmount: 721,
-      successRate: 94.2,
-      avgProcessingTime: '4.7m',
-      hasAnomaly: true,
-      anomalyDescription: 'Processing time 40% higher than normal'
-    },
-    {
-      id: 3,
-      type: 'deposit',
-      method: 'E-Wallet',
-      volume: 680000,
-      count: 2345,
-      avgAmount: 290,
-      successRate: 99.1,
-      avgProcessingTime: '1.8s',
-      hasAnomaly: false,
-      anomalyDescription: null
-    },
-    {
-      id: 4,
-      type: 'withdrawal',
-      method: 'Cryptocurrency',
-      volume: 420000,
-      count: 567,
-      avgAmount: 741,
-      successRate: 96.5,
-      avgProcessingTime: '12.4m',
-      hasAnomaly: true,
-      anomalyDescription: 'Unusual concentration of large withdrawals'
-    },
-    {
-      id: 5,
-      type: 'bonus',
-      method: 'Promotional Credit',
-      volume: 180000,
-      count: 890,
-      avgAmount: 202,
-      successRate: 100,
-      avgProcessingTime: 'Instant',
-      hasAnomaly: false,
-      anomalyDescription: null
-    }
-  ];
-
-  // Mock risk factors
-  const riskFactors = [
-    {
-      name: 'Transaction Velocity',
-      weight: 25,
-      impact: 'high',
-      icon: 'Zap'
-    },
-    {
-      name: 'Account Age',
-      weight: 15,
-      impact: 'medium',
-      icon: 'Calendar'
-    },
-    {
-      name: 'Geographic Risk',
-      weight: 20,
-      impact: 'high',
-      icon: 'MapPin'
-    },
-    {
-      name: 'Payment Method Risk',
-      weight: 18,
-      impact: 'medium',
-      icon: 'CreditCard'
-    },
-    {
-      name: 'Behavioral Patterns',
-      weight: 22,
-      impact: 'high',
-      icon: 'Activity'
-    }
-  ];
-
-  // Mock payment method data
-  const paymentMethodData = [
-    {
-      method: 'Credit Card',
-      volume: 1250000,
-      count: 3456,
-      percentage: 42.5,
-      successRate: 97.8,
-      avgAmount: 361,
-      riskLevel: 'low',
-      avgProcessingTime: '2.3s'
-    },
-    {
-      method: 'Bank Transfer',
-      volume: 890000,
-      count: 1234,
-      percentage: 30.2,
-      successRate: 94.2,
-      avgAmount: 721,
-      riskLevel: 'medium',
-      avgProcessingTime: '4.7m'
-    },
-    {
-      method: 'E-Wallet',
-      volume: 680000,
-      count: 2345,
-      percentage: 23.1,
-      successRate: 99.1,
-      avgAmount: 290,
-      riskLevel: 'low',
-      avgProcessingTime: '1.8s'
-    },
-    {
-      method: 'Cryptocurrency',
-      volume: 420000,
-      count: 567,
-      percentage: 14.3,
-      successRate: 96.5,
-      avgAmount: 741,
-      riskLevel: 'high',
-      avgProcessingTime: '12.4m'
-    },
-    {
-      method: 'Mobile Payment',
-      volume: 180000,
-      count: 890,
-      percentage: 6.1,
-      successRate: 98.7,
-      avgAmount: 202,
-      riskLevel: 'low',
-      avgProcessingTime: '1.2s'
-    }
-  ];
+  useEffect(() => {
+    getData();
+  }, [getData]);
 
   // Auto-refresh functionality
   useEffect(() => {
     let interval;
     if (isAutoRefresh) {
-      interval = setInterval(() => {
-        setLastUpdated(new Date());
-      }, refreshInterval * 1000);
+      interval = setInterval(getData, refreshInterval * 1000);
     }
     return () => clearInterval(interval);
-  }, [isAutoRefresh, refreshInterval]);
+  }, [isAutoRefresh, refreshInterval, getData]);
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
   };
 
   const handleManualRefresh = () => {
-    setLastUpdated(new Date());
+    getData();
   };
 
   const refreshIntervalOptions = [
@@ -399,17 +168,17 @@ const FinancialPerformanceRiskManagementDashboard = () => {
 
           {/* Financial KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-            {financialKPIs?.map((kpi, index) => (
+            {dashboardData?.financialKPIs?.map((kpi, index) => (
               <FinancialKPICard
                 key={index}
-                title={kpi?.title}
-                value={kpi?.value}
-                currency={kpi?.currency}
-                change={kpi?.change}
-                changeType={kpi?.changeType}
-                icon={kpi?.icon}
-                description={kpi?.description}
-                trend={kpi?.trend}
+                title={kpi.title}
+                value={kpi.value}
+                currency={kpi.currency}
+                change={kpi.change}
+                changeType={kpi.changeType}
+                icon={kpi.icon}
+                description={kpi.description}
+                trend={kpi.trend}
               />
             ))}
           </div>
@@ -419,7 +188,7 @@ const FinancialPerformanceRiskManagementDashboard = () => {
             {/* Revenue Stream Chart - 10 columns */}
             <div className="xl:col-span-10">
               <RevenueStreamChart 
-                data={revenueStreamData} 
+                data={dashboardData?.revenueStreamData}
                 currency={filters?.currency} 
               />
             </div>
@@ -427,9 +196,9 @@ const FinancialPerformanceRiskManagementDashboard = () => {
             {/* Risk Score Indicator - 6 columns */}
             <div className="xl:col-span-6">
               <RiskScoreIndicator
-                score={42}
-                trend={-5.3}
-                factors={riskFactors}
+                score={dashboardData?.riskScore?.score}
+                trend={dashboardData?.riskScore?.trend}
+                factors={dashboardData?.riskScore?.factors}
                 lastUpdated={lastUpdated}
               />
             </div>
@@ -440,21 +209,21 @@ const FinancialPerformanceRiskManagementDashboard = () => {
             {/* Financial Flow Diagram - 10 columns */}
             <div className="xl:col-span-10">
               <FinancialFlowDiagram 
-                flowData={financialFlowData} 
+                flowData={dashboardData?.financialFlowData}
                 currency={filters?.currency} 
               />
             </div>
             
             {/* Fraud Alert Feed - 6 columns */}
             <div className="xl:col-span-6">
-              <FraudAlertFeed alerts={fraudAlerts} />
+              <FraudAlertFeed alerts={dashboardData?.fraudAlerts} />
             </div>
           </div>
 
           {/* Payment Method Analysis */}
           <div className="mb-8">
             <PaymentMethodAnalysis 
-              data={paymentMethodData} 
+              data={dashboardData?.paymentMethodData}
               currency={filters?.currency} 
             />
           </div>

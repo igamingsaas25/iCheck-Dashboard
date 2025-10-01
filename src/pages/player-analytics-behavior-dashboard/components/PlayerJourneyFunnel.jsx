@@ -3,55 +3,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const PlayerJourneyFunnel = ({ filters }) => {
+const PlayerJourneyFunnel = ({ data }) => {
   const [viewMode, setViewMode] = useState('funnel'); // 'funnel' or 'cohort'
 
-  const funnelData = [
-    {
-      name: 'Registration',
-      value: 10000,
-      fill: '#3B82F6',
-      percentage: 100,
-      description: 'New player signups'
-    },
-    {
-      name: 'First Deposit',
-      value: 6800,
-      fill: '#8B5CF6',
-      percentage: 68,
-      description: 'Made initial deposit'
-    },
-    {
-      name: 'Active Player',
-      value: 4500,
-      fill: '#10B981',
-      percentage: 45,
-      description: '7+ days activity'
-    },
-    {
-      name: 'Regular Player',
-      value: 2800,
-      fill: '#F59E0B',
-      percentage: 28,
-      description: '30+ days activity'
-    },
-    {
-      name: 'High Value',
-      value: 1200,
-      fill: '#EF4444',
-      percentage: 12,
-      description: '$500+ lifetime spend'
-    }
-  ];
-
-  const cohortData = [
-    { week: 'Week 1', retention: 100, players: 1000 },
-    { week: 'Week 2', retention: 72, players: 720 },
-    { week: 'Week 3', retention: 58, players: 580 },
-    { week: 'Week 4', retention: 45, players: 450 },
-    { week: 'Week 8', retention: 32, players: 320 },
-    { week: 'Week 12', retention: 28, players: 280 }
-  ];
+  const funnelData = data?.funnel || [];
+  const cohortData = data?.cohort || [];
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload?.length) {
@@ -167,11 +123,11 @@ const PlayerJourneyFunnel = ({ filters }) => {
                   {stage?.value?.toLocaleString()}
                 </p>
                 <p className="text-xs text-muted-foreground">{stage?.percentage}%</p>
-                {index > 0 && (
+                {index > 0 && funnelData[index - 1] && (
                   <div className="mt-2 flex items-center justify-center space-x-1">
                     <Icon name="ArrowDown" size={12} className="text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
-                      {((stage?.value / funnelData?.[index - 1]?.value) * 100)?.toFixed(1)}%
+                      {((stage.value / funnelData[index - 1].value) * 100).toFixed(1)}%
                     </span>
                   </div>
                 )}
