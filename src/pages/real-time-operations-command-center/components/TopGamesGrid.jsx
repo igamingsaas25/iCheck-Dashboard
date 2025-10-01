@@ -2,103 +2,25 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 
 
-const TopGamesGrid = ({ className = '' }) => {
-  const [games, setGames] = useState([]);
+const TopGamesGrid = ({ initialGames, className = '' }) => {
+  const [games, setGames] = useState(initialGames || []);
   const [sortBy, setSortBy] = useState('revenue');
   const [viewMode, setViewMode] = useState('grid');
 
-  // Mock games data
-  const mockGames = [
-    {
-      id: 1,
-      name: 'Mega Fortune Slots',
-      category: 'Slots',
-      activePlayers: 2847,
-      revenue: 45680,
-      rtp: 96.2,
-      sessions: 1234,
-      avgBet: 12.50,
-      status: 'healthy',
-      trend: 'up',
-      change: '+12.5%'
-    },
-    {
-      id: 2,
-      name: 'Texas Hold\'em Pro',
-      category: 'Poker',
-      activePlayers: 1923,
-      revenue: 38920,
-      rtp: 94.8,
-      sessions: 856,
-      avgBet: 25.00,
-      status: 'healthy',
-      trend: 'up',
-      change: '+8.3%'
-    },
-    {
-      id: 3,
-      name: 'European Roulette',
-      category: 'Table Games',
-      activePlayers: 1456,
-      revenue: 32150,
-      rtp: 97.3,
-      sessions: 678,
-      avgBet: 18.75,
-      status: 'warning',
-      trend: 'down',
-      change: '-3.2%'
-    },
-    {
-      id: 4,
-      name: 'Blackjack Classic',
-      category: 'Table Games',
-      activePlayers: 1234,
-      revenue: 28940,
-      rtp: 99.1,
-      sessions: 567,
-      avgBet: 22.00,
-      status: 'healthy',
-      trend: 'up',
-      change: '+5.7%'
-    },
-    {
-      id: 5,
-      name: 'Dragon\'s Fortune',
-      category: 'Slots',
-      activePlayers: 987,
-      revenue: 24560,
-      rtp: 95.8,
-      sessions: 445,
-      avgBet: 15.25,
-      status: 'healthy',
-      trend: 'stable',
-      change: '+1.2%'
-    },
-    {
-      id: 6,
-      name: 'Baccarat VIP',
-      category: 'Table Games',
-      activePlayers: 756,
-      revenue: 22340,
-      rtp: 98.9,
-      sessions: 234,
-      avgBet: 45.00,
-      status: 'critical',
-      trend: 'down',
-      change: '-15.8%'
+  useEffect(() => {
+    if (initialGames) {
+      setGames(initialGames);
     }
-  ];
+  }, [initialGames]);
 
   useEffect(() => {
-    setGames(mockGames);
-    
-    // Simulate real-time updates
+    // Simulate real-time updates for demonstration
     const interval = setInterval(() => {
-      setGames(prev => prev?.map(game => ({
+      setGames(prev => prev.map(game => ({
         ...game,
-        activePlayers: Math.max(0, game?.activePlayers + Math.floor(Math.random() * 20 - 10)),
-        revenue: Math.max(0, game?.revenue + Math.floor(Math.random() * 1000 - 500)),
-        sessions: Math.max(0, game?.sessions + Math.floor(Math.random() * 10 - 5))
+        activePlayers: Math.max(0, game.activePlayers + Math.floor(Math.random() * 20 - 10)),
+        revenue: Math.max(0, game.revenue + Math.floor(Math.random() * 1000 - 500)),
+        sessions: Math.max(0, game.sessions + Math.floor(Math.random() * 10 - 5))
       })));
     }, 10000);
     

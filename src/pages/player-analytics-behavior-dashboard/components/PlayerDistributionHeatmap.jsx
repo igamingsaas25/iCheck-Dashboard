@@ -2,25 +2,11 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const PlayerDistributionHeatmap = ({ filters }) => {
+const PlayerDistributionHeatmap = ({ data }) => {
   const [viewMode, setViewMode] = useState('geographic'); // 'geographic' or 'timezone'
 
-  const geographicData = [
-    { region: 'North America', players: 12847, percentage: 35.2, growth: '+8.3%', color: '#3B82F6' },
-    { region: 'Europe', players: 9632, percentage: 26.4, growth: '+12.1%', color: '#8B5CF6' },
-    { region: 'Asia Pacific', players: 8945, percentage: 24.5, growth: '+15.7%', color: '#10B981' },
-    { region: 'Latin America', players: 3421, percentage: 9.4, growth: '+6.2%', color: '#F59E0B' },
-    { region: 'Middle East', players: 1689, percentage: 4.6, growth: '+18.9%', color: '#EF4444' }
-  ];
-
-  const timezoneData = [
-    { timezone: 'UTC-8 (PST)', players: 8945, peak: '8:00 PM', activity: 92 },
-    { timezone: 'UTC-5 (EST)', players: 7632, peak: '9:00 PM', activity: 88 },
-    { timezone: 'UTC+0 (GMT)', players: 6421, peak: '10:00 PM', activity: 85 },
-    { timezone: 'UTC+1 (CET)', players: 5234, peak: '9:30 PM', activity: 82 },
-    { timezone: 'UTC+8 (CST)', players: 4987, peak: '8:30 PM', activity: 79 },
-    { timezone: 'UTC+9 (JST)', players: 3456, peak: '9:00 PM', activity: 76 }
-  ];
+  const geographicData = data?.geographic || [];
+  const timezoneData = data?.timezone || [];
 
   const getActivityLevel = (activity) => {
     if (activity >= 90) return { level: 'Very High', color: 'bg-success', textColor: 'text-success' };
@@ -106,7 +92,7 @@ const PlayerDistributionHeatmap = ({ filters }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <p className="text-lg font-semibold text-foreground">
-                  {geographicData?.reduce((sum, region) => sum + region?.players, 0)?.toLocaleString()}
+                  {geographicData.reduce((sum, region) => sum + region.players, 0)?.toLocaleString()}
                 </p>
                 <p className="text-xs text-muted-foreground">Total Players</p>
               </div>

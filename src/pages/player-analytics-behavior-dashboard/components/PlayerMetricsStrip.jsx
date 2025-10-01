@@ -1,13 +1,13 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 
-const PlayerMetricsStrip = ({ filters }) => {
+const PlayerMetricsStrip = ({ data }) => {
   const metrics = [
     {
       id: 'acquisition',
       title: 'Player Acquisition',
-      value: '2,847',
-      change: '+12.3%',
+      value: data?.acquisition?.value?.toLocaleString() || 'N/A',
+      change: data?.acquisition?.change,
       changeType: 'positive',
       icon: 'UserPlus',
       description: 'New registrations',
@@ -16,8 +16,8 @@ const PlayerMetricsStrip = ({ filters }) => {
     {
       id: 'retention',
       title: 'Retention Rate',
-      value: '68.4%',
-      change: '+2.1%',
+      value: data?.retention?.value ? `${(data.retention.value * 100).toFixed(1)}%` : 'N/A',
+      change: data?.retention?.change,
       changeType: 'positive',
       icon: 'Users',
       description: '7-day retention',
@@ -26,8 +26,8 @@ const PlayerMetricsStrip = ({ filters }) => {
     {
       id: 'session',
       title: 'Avg Session Duration',
-      value: '24.6m',
-      change: '-1.2m',
+      value: data?.avgSession?.value || 'N/A',
+      change: data?.avgSession?.change,
       changeType: 'negative',
       icon: 'Clock',
       description: 'Average playtime',
@@ -36,8 +36,8 @@ const PlayerMetricsStrip = ({ filters }) => {
     {
       id: 'ltv',
       title: 'Customer LTV',
-      value: '$487.20',
-      change: '+$23.40',
+      value: data?.ltv?.value ? `$${data.ltv.value.toFixed(2)}` : 'N/A',
+      change: data?.ltv?.change,
       changeType: 'positive',
       icon: 'DollarSign',
       description: 'Lifetime value',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../../components/ui/Header';
 import GlobalFilterBar from '../../components/ui/GlobalFilterBar';
 import AlertNotificationCenter from '../../components/ui/AlertNotificationCenter';
@@ -10,42 +10,43 @@ import BusinessScorecard from './components/BusinessScorecard';
 import PredictiveAnalyticsOverlay from './components/PredictiveAnalyticsOverlay';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import { supabase } from '../../utils/supabaseClient';
 
 const ExecutiveSummaryStrategicInsightsDashboard = () => {
   const [filters, setFilters] = useState({});
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [error, setError] = useState(null);
+
+  const getData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+        const { data, error } = await supabase.functions.invoke('get-executive-summary', {
+            body: { filters },
+        });
+        if (error) throw error;
+        setDashboardData(data);
+        setLastUpdated(new Date());
+    } catch (err) {
+        console.error("Failed to fetch executive summary data:", err);
+        setError("Failed to load dashboard data. Please try again.");
+    } finally {
+        setIsLoading(false);
+    }
+  }, [filters]);
 
   useEffect(() => {
-    // Simulate initial data loading
-    const loadData = async () => {
-      setIsLoading(true);
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setIsLoading(false);
-    };
-
-    loadData();
-
-    // Set up hourly updates
-    const updateInterval = setInterval(() => {
-      setLastUpdated(new Date());
-    }, 3600000); // 1 hour
-
-    return () => clearInterval(updateInterval);
-  }, []);
+    getData();
+  }, [getData]);
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
-    setLastUpdated(new Date());
   };
 
-  const handleRefresh = async () => {
-    setIsLoading(true);
-    // Simulate data refresh
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setLastUpdated(new Date());
-    setIsLoading(false);
+  const handleRefresh = () => {
+    getData();
   };
 
   const handlePrintView = () => {
@@ -149,14 +150,14 @@ const ExecutiveSummaryStrategicInsightsDashboard = () => {
               <Icon name="Activity" size={20} className="text-primary" />
               <h2 className="text-lg font-semibold text-foreground">Business Health Overview</h2>
             </div>
-            <BusinessHealthIndicators />
+            <BusinessHealthIndicators data={dashboardData?.businessHealth} />
           </section>
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
             {/* Strategic Performance Chart - 8 columns */}
             <div className="xl:col-span-8">
-              <StrategicPerformanceChart />
+              <StrategicPerformanceChart data={dashboardData?.strategicPerformance} />
             </div>
             
             {/* Market Positioning Metrics - 4 columns */}
@@ -167,12 +168,12 @@ const ExecutiveSummaryStrategicInsightsDashboard = () => {
 
           {/* Business Scorecard - Full Width */}
           <section className="mb-8">
-            <BusinessScorecard />
+            <BusinessScorecard data={dashboardData?.businessScorecard} />
           </section>
 
           {/* Predictive Analytics Overlay */}
           <section className="mb-8">
-            <PredictiveAnalyticsOverlay />
+            <PredictiveAnalyticsOverlay data={dashboardData?.predictiveAnalytics} />
           </section>
 
           {/* Executive Summary Footer */}

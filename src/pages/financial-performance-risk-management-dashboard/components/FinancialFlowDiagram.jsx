@@ -5,6 +5,7 @@ const FinancialFlowDiagram = ({ flowData, currency = 'USD' }) => {
   const [selectedFlow, setSelectedFlow] = useState(null);
 
   const formatCurrency = (value) => {
+    if (typeof value !== 'number') return '$0';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,

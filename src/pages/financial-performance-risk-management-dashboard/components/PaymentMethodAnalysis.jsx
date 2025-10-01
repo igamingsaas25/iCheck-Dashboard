@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const PaymentMethodAnalysis = ({ data, currency = 'USD' }) => {
+const PaymentMethodAnalysis = ({ data = [], currency = 'USD' }) => {
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [viewMode, setViewMode] = useState('volume'); // 'volume' or 'count'
 
@@ -80,9 +80,9 @@ const PaymentMethodAnalysis = ({ data, currency = 'USD' }) => {
     return null;
   };
 
-  const chartData = data?.map((item, index) => ({
+  const chartData = data.map((item, index) => ({
     ...item,
-    value: viewMode === 'volume' ? item?.volume : item?.count,
+    value: viewMode === 'volume' ? item.volume : item.count,
     color: getMethodColor(index)
   }));
 
@@ -230,19 +230,19 @@ const PaymentMethodAnalysis = ({ data, currency = 'USD' }) => {
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-success font-data">
-              {Math.round(data?.reduce((sum, m) => sum + m?.successRate, 0) / data?.length)}%
+              {data.length > 0 ? Math.round(data.reduce((sum, m) => sum + m.successRate, 0) / data.length) : 0}%
             </div>
             <div className="text-xs text-muted-foreground">Avg Success Rate</div>
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-foreground font-data">
-              {formatCurrency(data?.reduce((sum, m) => sum + m?.volume, 0))}
+              {formatCurrency(data.reduce((sum, m) => sum + m.volume, 0))}
             </div>
             <div className="text-xs text-muted-foreground">Total Volume</div>
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-foreground font-data">
-              {data?.reduce((sum, m) => sum + m?.count, 0)?.toLocaleString()}
+              {data.reduce((sum, m) => sum + m.count, 0)?.toLocaleString()}
             </div>
             <div className="text-xs text-muted-foreground">Total Transactions</div>
           </div>

@@ -3,44 +3,15 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const PredictiveAnalyticsOverlay = () => {
+const PredictiveAnalyticsOverlay = ({ data }) => {
   const [selectedMetric, setSelectedMetric] = useState('revenue');
   const [forecastPeriod, setForecastPeriod] = useState('6months');
 
-  const historicalData = [
-    { period: 'Jan 2024', revenue: 42.5, players: 1.8, marketShare: 21.2 },
-    { period: 'Feb 2024', revenue: 43.8, players: 1.9, marketShare: 21.8 },
-    { period: 'Mar 2024', revenue: 45.2, players: 2.0, marketShare: 22.1 },
-    { period: 'Apr 2024', revenue: 46.1, players: 2.0, marketShare: 22.4 },
-    { period: 'May 2024', revenue: 47.2, players: 2.1, marketShare: 23.0 },
-    { period: 'Jun 2024', revenue: 47.8, players: 2.1, marketShare: 23.4 }
-  ];
+  const historicalData = data?.historical || [];
 
-  const forecastData6Months = [
-    ...historicalData,
-    { period: 'Jul 2024', revenue: 48.5, players: 2.2, marketShare: 23.8, forecast: true },
-    { period: 'Aug 2024', revenue: 49.2, players: 2.2, marketShare: 24.1, forecast: true },
-    { period: 'Sep 2024', revenue: 50.1, players: 2.3, marketShare: 24.5, forecast: true },
-    { period: 'Oct 2024', revenue: 51.0, players: 2.4, marketShare: 24.8, forecast: true },
-    { period: 'Nov 2024', revenue: 51.8, players: 2.4, marketShare: 25.2, forecast: true },
-    { period: 'Dec 2024', revenue: 52.5, players: 2.5, marketShare: 25.6, forecast: true }
-  ];
-
-  const forecastData12Months = [
-    ...historicalData,
-    { period: 'Jul 2024', revenue: 48.5, players: 2.2, marketShare: 23.8, forecast: true },
-    { period: 'Aug 2024', revenue: 49.2, players: 2.2, marketShare: 24.1, forecast: true },
-    { period: 'Sep 2024', revenue: 50.1, players: 2.3, marketShare: 24.5, forecast: true },
-    { period: 'Oct 2024', revenue: 51.0, players: 2.4, marketShare: 24.8, forecast: true },
-    { period: 'Nov 2024', revenue: 51.8, players: 2.4, marketShare: 25.2, forecast: true },
-    { period: 'Dec 2024', revenue: 52.5, players: 2.5, marketShare: 25.6, forecast: true },
-    { period: 'Jan 2025', revenue: 53.2, players: 2.5, marketShare: 26.0, forecast: true },
-    { period: 'Feb 2025', revenue: 54.0, players: 2.6, marketShare: 26.3, forecast: true },
-    { period: 'Mar 2025', revenue: 54.8, players: 2.6, marketShare: 26.7, forecast: true },
-    { period: 'Apr 2025', revenue: 55.5, players: 2.7, marketShare: 27.1, forecast: true },
-    { period: 'May 2025', revenue: 56.3, players: 2.7, marketShare: 27.4, forecast: true },
-    { period: 'Jun 2025', revenue: 57.1, players: 2.8, marketShare: 27.8, forecast: true }
-  ];
+  // The data prop should contain both 6 and 12 month forecasts
+  const forecastData6Months = data?.forecast6Months ? [...historicalData, ...data.forecast6Months] : historicalData;
+  const forecastData12Months = data?.forecast12Months ? [...historicalData, ...data.forecast12Months] : historicalData;
 
   const currentData = forecastPeriod === '6months' ? forecastData6Months : forecastData12Months;
   const currentPeriodIndex = historicalData?.length - 1;
@@ -94,14 +65,17 @@ const PredictiveAnalyticsOverlay = () => {
   };
 
   const getForecastSummary = () => {
-    const lastHistorical = historicalData?.[historicalData?.length - 1];
-    const lastForecast = currentData?.[currentData?.length - 1];
+    if (!historicalData || historicalData.length === 0 || !currentData || currentData.length === 0) {
+      return { current: 0, projected: 0, growth: 0, period: forecastPeriod === '6months' ? '6 months' : '12 months' };
+    }
+    const lastHistorical = historicalData[historicalData.length - 1];
+    const lastForecast = currentData[currentData.length - 1];
     
-    const growthRate = ((lastForecast?.[selectedMetric] - lastHistorical?.[selectedMetric]) / lastHistorical?.[selectedMetric] * 100)?.toFixed(1);
+    const growthRate = ((lastForecast[selectedMetric] - lastHistorical[selectedMetric]) / lastHistorical[selectedMetric] * 100).toFixed(1);
     
     return {
-      current: lastHistorical?.[selectedMetric],
-      projected: lastForecast?.[selectedMetric],
+      current: lastHistorical[selectedMetric],
+      projected: lastForecast[selectedMetric],
       growth: growthRate,
       period: forecastPeriod === '6months' ? '6 months' : '12 months'
     };

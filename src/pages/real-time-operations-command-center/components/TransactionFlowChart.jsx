@@ -3,59 +3,31 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const TransactionFlowChart = ({ className = '' }) => {
+const TransactionFlowChart = ({ initialData, className = '' }) => {
   const [timeRange, setTimeRange] = useState('15m');
   const [chartType, setChartType] = useState('combined');
   const [isLive, setIsLive] = useState(true);
-
-  // Mock real-time transaction data
-  const [transactionData, setTransactionData] = useState([]);
-
-  const generateMockData = () => {
-    const now = new Date();
-    const data = [];
-    const intervals = timeRange === '15m' ? 15 : timeRange === '1h' ? 60 : 240;
-    
-    for (let i = intervals; i >= 0; i--) {
-      const timestamp = new Date(now.getTime() - i * 60000);
-      const baseWagers = 1200 + Math.random() * 800;
-      const basePayouts = baseWagers * (0.85 + Math.random() * 0.1);
-      
-      data?.push({
-        time: timestamp?.toLocaleTimeString('en-US', { 
-          hour12: false, 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
-        timestamp: timestamp?.getTime(),
-        wagers: Math.round(baseWagers),
-        payouts: Math.round(basePayouts),
-        netRevenue: Math.round(baseWagers - basePayouts),
-        transactions: Math.round(150 + Math.random() * 100)
-      });
-    }
-    return data;
-  };
+  const [transactionData, setTransactionData] = useState(initialData || []);
 
   useEffect(() => {
-    setTransactionData(generateMockData());
-    
+    if (initialData) {
+      setTransactionData(initialData);
+    }
+  }, [initialData]);
+
+  useEffect(() => {
     if (isLive) {
       const interval = setInterval(() => {
         setTransactionData(prev => {
-          const newData = [...prev?.slice(1)];
-          const lastPoint = prev?.[prev?.length - 1];
+          if (!prev || prev.length === 0) return [];
+          const newData = [...prev.slice(1)];
           const now = new Date();
           const baseWagers = 1200 + Math.random() * 800;
           const basePayouts = baseWagers * (0.85 + Math.random() * 0.1);
           
-          newData?.push({
-            time: now?.toLocaleTimeString('en-US', { 
-              hour12: false, 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            }),
-            timestamp: now?.getTime(),
+          newData.push({
+            time: now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+            timestamp: now.getTime(),
             wagers: Math.round(baseWagers),
             payouts: Math.round(basePayouts),
             netRevenue: Math.round(baseWagers - basePayouts),
@@ -68,7 +40,7 @@ const TransactionFlowChart = ({ className = '' }) => {
       
       return () => clearInterval(interval);
     }
-  }, [timeRange, isLive]);
+  }, [isLive]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload?.length) {

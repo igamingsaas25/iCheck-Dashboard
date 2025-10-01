@@ -1,24 +1,36 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 
-const BusinessHealthIndicators = () => {
+const BusinessHealthIndicators = ({ data }) => {
+  const formatValue = (value, type) => {
+    if (typeof value !== 'number') return 'N/A';
+    if (type === 'currency') return `$${(value / 1000000).toFixed(1)}M`;
+    if (type === 'percentage') return `${(value * 100).toFixed(1)}%`;
+    return value.toLocaleString();
+  };
+
+  const formatChange = (change) => {
+    if (typeof change !== 'number') return 'N/A';
+    return `${change > 0 ? '+' : ''}${change.toFixed(1)}%`;
+  };
+
   const indicators = [
     {
       id: 1,
       title: "Total Revenue",
-      value: "$47.2M",
-      change: "+12.3%",
-      trend: "up",
-      period: "vs last quarter",
+      value: formatValue(data?.totalRevenue?.value, 'currency'),
+      change: formatChange(data?.totalRevenue?.change),
+      trend: (data?.totalRevenue?.change || 0) >= 0 ? 'up' : 'down',
+      period: "vs last period",
       description: "Gross gaming revenue across all platforms",
       status: "excellent"
     },
     {
       id: 2,
       title: "Player Growth Rate",
-      value: "18.7%",
-      change: "+3.2%",
-      trend: "up",
+      value: formatValue(data?.playerGrowthRate?.value, 'percentage'),
+      change: formatChange(data?.playerGrowthRate?.change),
+      trend: (data?.playerGrowthRate?.change || 0) >= 0 ? 'up' : 'down',
       period: "monthly growth",
       description: "New player acquisition and retention",
       status: "good"
@@ -26,9 +38,9 @@ const BusinessHealthIndicators = () => {
     {
       id: 3,
       title: "Market Share",
-      value: "23.4%",
-      change: "+1.8%",
-      trend: "up",
+      value: formatValue(data?.marketShare?.value, 'percentage'),
+      change: formatChange(data?.marketShare?.change),
+      trend: (data?.marketShare?.change || 0) >= 0 ? 'up' : 'down',
       period: "in target regions",
       description: "Competitive position in key markets",
       status: "good"
@@ -36,9 +48,9 @@ const BusinessHealthIndicators = () => {
     {
       id: 4,
       title: "Operational Efficiency",
-      value: "94.2%",
-      change: "-0.5%",
-      trend: "down",
+      value: formatValue(data?.operationalEfficiency?.value, 'percentage'),
+      change: formatChange(data?.operationalEfficiency?.change),
+      trend: (data?.operationalEfficiency?.change || 0) >= 0 ? 'up' : 'down',
       period: "system uptime",
       description: "Platform availability and performance",
       status: "warning"

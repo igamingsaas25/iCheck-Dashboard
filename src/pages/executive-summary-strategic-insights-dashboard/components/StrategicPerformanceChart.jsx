@@ -3,72 +3,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const StrategicPerformanceChart = () => {
+const StrategicPerformanceChart = ({ data }) => {
   const [activeView, setActiveView] = useState('revenue');
   const [timePeriod, setTimePeriod] = useState('quarterly');
 
-  const quarterlyData = [
-    {
-      period: 'Q1 2024',
-      revenue: 42.5,
-      playerAcquisitionCost: 28.3,
-      profitMargin: 24.2,
-      marketShare: 21.8
-    },
-    {
-      period: 'Q2 2024',
-      revenue: 45.8,
-      playerAcquisitionCost: 26.7,
-      profitMargin: 26.1,
-      marketShare: 22.4
-    },
-    {
-      period: 'Q3 2024',
-      revenue: 47.2,
-      playerAcquisitionCost: 25.1,
-      profitMargin: 28.3,
-      marketShare: 23.4
-    },
-    {
-      period: 'Q4 2024',
-      revenue: 49.8,
-      playerAcquisitionCost: 24.2,
-      profitMargin: 29.7,
-      marketShare: 24.1
-    }
-  ];
-
-  const annualData = [
-    {
-      period: '2021',
-      revenue: 156.2,
-      playerAcquisitionCost: 32.1,
-      profitMargin: 18.5,
-      marketShare: 18.2
-    },
-    {
-      period: '2022',
-      revenue: 168.7,
-      playerAcquisitionCost: 30.8,
-      profitMargin: 21.3,
-      marketShare: 19.8
-    },
-    {
-      period: '2023',
-      revenue: 181.3,
-      playerAcquisitionCost: 28.9,
-      profitMargin: 23.7,
-      marketShare: 21.5
-    },
-    {
-      period: '2024',
-      revenue: 190.1,
-      playerAcquisitionCost: 26.1,
-      profitMargin: 27.1,
-      marketShare: 22.9
-    }
-  ];
-
+  const quarterlyData = data?.quarterly || [];
+  const annualData = data?.annual || [];
   const currentData = timePeriod === 'quarterly' ? quarterlyData : annualData;
 
   const viewOptions = [

@@ -4,7 +4,7 @@ import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
 
-const EngagementMatrix = ({ filters }) => {
+const EngagementMatrix = ({ data }) => {
   const [selectedSegment, setSelectedSegment] = useState('all');
   const [viewMode, setViewMode] = useState('bubble'); // 'bubble' or 'heatmap'
 
@@ -16,70 +16,8 @@ const EngagementMatrix = ({ filters }) => {
     { value: 'high-value', label: 'High Value Players' }
   ];
 
-  const bubbleData = [
-    { 
-      gameType: 'Slots', 
-      engagement: 85, 
-      revenue: 450, 
-      playerCount: 12500, 
-      avgSession: 28,
-      demographics: 'Mixed Age Groups',
-      color: '#3B82F6'
-    },
-    { 
-      gameType: 'Blackjack', 
-      engagement: 72, 
-      revenue: 380, 
-      playerCount: 8900, 
-      avgSession: 35,
-      demographics: '25-45 Years',
-      color: '#8B5CF6'
-    },
-    { 
-      gameType: 'Roulette', 
-      engagement: 68, 
-      revenue: 320, 
-      playerCount: 6700, 
-      avgSession: 22,
-      demographics: '35-55 Years',
-      color: '#10B981'
-    },
-    { 
-      gameType: 'Poker', 
-      engagement: 78, 
-      revenue: 520, 
-      playerCount: 4500, 
-      avgSession: 45,
-      demographics: '30-50 Years',
-      color: '#F59E0B'
-    },
-    { 
-      gameType: 'Baccarat', 
-      engagement: 65, 
-      revenue: 280, 
-      playerCount: 3200, 
-      avgSession: 18,
-      demographics: '40-60 Years',
-      color: '#EF4444'
-    },
-    { 
-      gameType: 'Sports Betting', 
-      engagement: 82, 
-      revenue: 410, 
-      playerCount: 9800, 
-      avgSession: 15,
-      demographics: '20-40 Years',
-      color: '#06B6D4'
-    }
-  ];
-
-  const heatmapData = [
-    { ageGroup: '18-25', slots: 90, blackjack: 45, roulette: 35, poker: 25, baccarat: 15, sports: 95 },
-    { ageGroup: '26-35', slots: 85, blackjack: 75, roulette: 65, poker: 80, baccarat: 40, sports: 90 },
-    { ageGroup: '36-45', slots: 80, blackjack: 85, roulette: 80, poker: 90, baccarat: 70, sports: 75 },
-    { ageGroup: '46-55', slots: 75, blackjack: 80, roulette: 85, poker: 85, baccarat: 85, sports: 60 },
-    { ageGroup: '56+', slots: 70, blackjack: 70, roulette: 90, poker: 75, baccarat: 90, sports: 45 }
-  ];
+  const bubbleData = data?.bubble || [];
+  const heatmapData = data?.heatmap || [];
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload?.length) {

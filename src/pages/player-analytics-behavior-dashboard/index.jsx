@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../../components/ui/Header';
 import GlobalFilterBar from '../../components/ui/GlobalFilterBar';
 import AlertNotificationCenter from '../../components/ui/AlertNotificationCenter';
@@ -10,23 +10,46 @@ import EngagementMatrix from './components/EngagementMatrix';
 import AdvancedFilterPanel from './components/AdvancedFilterPanel';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import { supabase } from '../../utils/supabaseClient';
 
 const PlayerAnalyticsBehaviorDashboard = () => {
   const [globalFilters, setGlobalFilters] = useState({});
   const [advancedFilters, setAdvancedFilters] = useState({});
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const getData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+        const { data, error } = await supabase.functions.invoke('get-player-analytics', {
+            body: { filters: { ...globalFilters, ...advancedFilters } },
+        });
+        if (error) throw error;
+        setDashboardData(data);
+        setLastUpdated(new Date());
+    } catch (err) {
+        console.error("Failed to fetch player analytics data:", err);
+        setError("Failed to load player analytics data. Please try again.");
+    } finally {
+        setIsLoading(false);
+    }
+  }, [globalFilters, advancedFilters]);
+
+  useEffect(() => {
+    getData();
+  }, [getData]);
 
   // Auto-refresh data every 30 minutes
   useEffect(() => {
     if (isAutoRefresh) {
-      const interval = setInterval(() => {
-        setLastUpdated(new Date());
-      }, 30 * 60 * 1000); // 30 minutes
-
+      const interval = setInterval(getData, 30 * 60 * 1000); // 30 minutes
       return () => clearInterval(interval);
     }
-  }, [isAutoRefresh]);
+  }, [isAutoRefresh, getData]);
 
   const handleGlobalFiltersChange = (filters) => {
     setGlobalFilters(filters);
@@ -37,7 +60,7 @@ const PlayerAnalyticsBehaviorDashboard = () => {
   };
 
   const refreshData = () => {
-    setLastUpdated(new Date());
+    getData();
   };
 
   return (
@@ -122,24 +145,24 @@ const PlayerAnalyticsBehaviorDashboard = () => {
         </div>
 
         {/* Primary Metrics Strip */}
-        <PlayerMetricsStrip filters={{ ...globalFilters, ...advancedFilters }} />
+        <PlayerMetricsStrip data={dashboardData?.playerMetrics} />
 
         {/* Main Analytics Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
           {/* Player Journey Funnel - Main Content (8 cols) */}
           <div className="xl:col-span-8">
-            <PlayerJourneyFunnel filters={{ ...globalFilters, ...advancedFilters }} />
+            <PlayerJourneyFunnel data={dashboardData?.journeyFunnel} />
           </div>
 
           {/* Player Distribution Heatmap - Right Panel (4 cols) */}
           <div className="xl:col-span-4">
-            <PlayerDistributionHeatmap filters={{ ...globalFilters, ...advancedFilters }} />
+            <PlayerDistributionHeatmap data={dashboardData?.distribution} />
           </div>
         </div>
 
         {/* Full-Width Engagement Matrix */}
         <div className="mb-6">
-          <EngagementMatrix filters={{ ...globalFilters, ...advancedFilters }} />
+          <EngagementMatrix data={dashboardData?.engagement} />
         </div>
 
         {/* Additional Insights Grid */}

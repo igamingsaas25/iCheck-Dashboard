@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../../components/ui/Header';
 import GlobalFilterBar from '../../components/ui/GlobalFilterBar';
 import AlertNotificationCenter from '../../components/ui/AlertNotificationCenter';
@@ -11,60 +11,16 @@ import SystemStatusIndicator from './components/SystemStatusIndicator';
 import Button from '../../components/ui/Button';
 import Select from '../../components/ui/Select';
 import Icon from '../../components/AppIcon';
+import { supabase } from '../../utils/supabaseClient'; // Import the Supabase client
 
 const RealTimeOperationsCommandCenter = () => {
   const [filters, setFilters] = useState({});
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(5);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
-
-  // Mock KPI data with real-time updates
-  const [kpiData, setKpiData] = useState({
-    activePlayers: {
-      value: '12,847',
-      change: '+8.2%',
-      changeType: 'positive',
-      sparklineData: [12200, 12350, 12500, 12680, 12847],
-      threshold: 'good'
-    },
-    transactionsPerMinute: {
-      value: '1,234',
-      unit: '/min',
-      change: '+12.5%',
-      changeType: 'positive',
-      sparklineData: [1100, 1150, 1200, 1220, 1234],
-      threshold: 'good'
-    },
-    revenueRate: {
-      value: '$45.2K',
-      unit: '/hr',
-      change: '+5.7%',
-      changeType: 'positive',
-      sparklineData: [42000, 43000, 44000, 44500, 45200],
-      threshold: 'good'
-    },
-    systemUptime: {
-      value: '99.97%',
-      change: '+0.02%',
-      changeType: 'positive',
-      sparklineData: [99.95, 99.96, 99.97, 99.97, 99.97],
-      threshold: 'good'
-    },
-    alertCount: {
-      value: '7',
-      change: '+2',
-      changeType: 'negative',
-      sparklineData: [5, 6, 7, 8, 7],
-      threshold: 'warning'
-    },
-    conversionRate: {
-      value: '3.42%',
-      change: '-0.15%',
-      changeType: 'negative',
-      sparklineData: [3.60, 3.55, 3.50, 3.45, 3.42],
-      threshold: 'warning'
-    }
-  });
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const refreshIntervalOptions = [
     { value: 5, label: '5 seconds' },
@@ -73,58 +29,39 @@ const RealTimeOperationsCommandCenter = () => {
     { value: 60, label: '1 minute' }
   ];
 
-  // Auto-refresh functionality
-  useEffect(() => {
-    if (!autoRefresh) return;
+  const getData = useCallback(async () => {
+    setError(null);
+    try {
+      // Invoke the Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('get-real-time-data', {
+        body: { filters },
+      });
 
-    const interval = setInterval(() => {
-      // Simulate real-time KPI updates
-      setKpiData(prev => ({
-        activePlayers: {
-          ...prev?.activePlayers,
-          value: (12847 + Math.floor(Math.random() * 200 - 100))?.toLocaleString(),
-          sparklineData: [...prev?.activePlayers?.sparklineData?.slice(1), 12847 + Math.floor(Math.random() * 200 - 100)]
-        },
-        transactionsPerMinute: {
-          ...prev?.transactionsPerMinute,
-          value: (1234 + Math.floor(Math.random() * 100 - 50))?.toLocaleString(),
-          sparklineData: [...prev?.transactionsPerMinute?.sparklineData?.slice(1), 1234 + Math.floor(Math.random() * 100 - 50)]
-        },
-        revenueRate: {
-          ...prev?.revenueRate,
-          value: `$${(45.2 + Math.random() * 2 - 1)?.toFixed(1)}K`,
-          sparklineData: [...prev?.revenueRate?.sparklineData?.slice(1), 45200 + Math.floor(Math.random() * 2000 - 1000)]
-        },
-        systemUptime: {
-          ...prev?.systemUptime,
-          value: `${(99.97 + Math.random() * 0.02 - 0.01)?.toFixed(2)}%`,
-          sparklineData: [...prev?.systemUptime?.sparklineData?.slice(1), 99.97 + Math.random() * 0.02 - 0.01]
-        },
-        alertCount: {
-          ...prev?.alertCount,
-          value: Math.max(0, 7 + Math.floor(Math.random() * 3 - 1))?.toString(),
-          sparklineData: [...prev?.alertCount?.sparklineData?.slice(1), Math.max(0, 7 + Math.floor(Math.random() * 3 - 1))]
-        },
-        conversionRate: {
-          ...prev?.conversionRate,
-          value: `${(3.42 + Math.random() * 0.2 - 0.1)?.toFixed(2)}%`,
-          sparklineData: [...prev?.conversionRate?.sparklineData?.slice(1), 3.42 + Math.random() * 0.2 - 0.1]
-        }
-      }));
+      if (error) throw error;
       
+      setDashboardData(data);
       setLastUpdated(new Date());
-    }, refreshInterval * 1000);
+    } catch (err) {
+      console.error("Error fetching from Supabase function:", err);
+      setError("Failed to load dashboard data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters]);
 
+  useEffect(() => {
+    getData(); // Initial fetch
+    if (!autoRefresh) return;
+    const interval = setInterval(getData, refreshInterval * 1000);
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval]);
+  }, [autoRefresh, refreshInterval, getData]);
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
   };
 
   const handleManualRefresh = () => {
-    setLastUpdated(new Date());
-    // Trigger manual data refresh
+    getData();
   };
 
   return (
@@ -183,87 +120,49 @@ const RealTimeOperationsCommandCenter = () => {
         <div className="spacing-dashboard">
           {/* KPI Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-            <KPICard
-              title="Active Players"
-              value={kpiData?.activePlayers?.value}
-              change={kpiData?.activePlayers?.change}
-              changeType={kpiData?.activePlayers?.changeType}
-              icon="Users"
-              sparklineData={kpiData?.activePlayers?.sparklineData}
-              threshold={kpiData?.activePlayers?.threshold}
-              unit=""
-            />
-            <KPICard
-              title="Transactions/Min"
-              value={kpiData?.transactionsPerMinute?.value}
-              unit={kpiData?.transactionsPerMinute?.unit}
-              change={kpiData?.transactionsPerMinute?.change}
-              changeType={kpiData?.transactionsPerMinute?.changeType}
-              icon="Activity"
-              sparklineData={kpiData?.transactionsPerMinute?.sparklineData}
-              threshold={kpiData?.transactionsPerMinute?.threshold}
-            />
-            <KPICard
-              title="Revenue Rate"
-              value={kpiData?.revenueRate?.value}
-              unit={kpiData?.revenueRate?.unit}
-              change={kpiData?.revenueRate?.change}
-              changeType={kpiData?.revenueRate?.changeType}
-              icon="DollarSign"
-              sparklineData={kpiData?.revenueRate?.sparklineData}
-              threshold={kpiData?.revenueRate?.threshold}
-            />
-            <KPICard
-              title="System Uptime"
-              value={kpiData?.systemUptime?.value}
-              change={kpiData?.systemUptime?.change}
-              changeType={kpiData?.systemUptime?.changeType}
-              icon="Server"
-              sparklineData={kpiData?.systemUptime?.sparklineData}
-              threshold={kpiData?.systemUptime?.threshold}
-              unit=""
-            />
-            <KPICard
-              title="Active Alerts"
-              value={kpiData?.alertCount?.value}
-              change={kpiData?.alertCount?.change}
-              changeType={kpiData?.alertCount?.changeType}
-              icon="AlertTriangle"
-              sparklineData={kpiData?.alertCount?.sparklineData}
-              threshold={kpiData?.alertCount?.threshold}
-              unit=""
-            />
-            <KPICard
-              title="Conversion Rate"
-              value={kpiData?.conversionRate?.value}
-              change={kpiData?.conversionRate?.change}
-              changeType={kpiData?.conversionRate?.changeType}
-              icon="Target"
-              sparklineData={kpiData?.conversionRate?.sparklineData}
-              threshold={kpiData?.conversionRate?.threshold}
-              unit=""
-            />
+            {Object.entries(dashboardData?.kpiData || {})?.map(([key, data]) => (
+              <KPICard
+                key={key}
+                title={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                value={typeof data.value === 'number' ? data.value.toLocaleString() : data.value}
+                unit={data.unit}
+                change={data.change}
+                changeType={data.changeType}
+                icon={
+                  key === 'activePlayers' ? 'Users' :
+                  key === 'transactionsPerMinute' ? 'Activity' :
+                  key === 'revenueRate' ? 'DollarSign' :
+                  key === 'systemUptime' ? 'Server' :
+                  key === 'alertCount' ? 'AlertTriangle' : 'Target'
+                }
+                sparklineData={data.sparklineData}
+                threshold={data.threshold}
+              />
+            ))}
           </div>
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-6">
             {/* Transaction Flow Chart - Takes 3 columns on desktop */}
             <div className="xl:col-span-3">
-              <TransactionFlowChart />
+              <TransactionFlowChart initialData={dashboardData?.transactionFlowData} />
             </div>
             
             {/* Alert Feed - Takes 1 column on desktop */}
             <div className="xl:col-span-1">
-              <AlertFeed />
+              <AlertFeed initialAlerts={dashboardData?.alerts} />
             </div>
           </div>
 
           {/* Top Games Grid */}
-          <TopGamesGrid />
+          <TopGamesGrid initialGames={dashboardData?.topGames} />
         </div>
       </main>
       {/* System Status Indicator */}
-      <SystemStatusIndicator />
+      <SystemStatusIndicator
+        systemStatus={dashboardData?.systemStatus}
+        connectionStatus={dashboardData?.connectionStatus}
+      />
     </div>
   );
 };

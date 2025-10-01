@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const FraudAlertFeed = ({ alerts }) => {
+const FraudAlertFeed = ({ alerts = [] }) => {
   const [filter, setFilter] = useState('all');
 
   const getSeverityColor = (severity) => {
@@ -50,10 +50,10 @@ const FraudAlertFeed = ({ alerts }) => {
 
   const filteredAlerts = filter === 'all' 
     ? alerts 
-    : alerts?.filter(alert => alert?.severity === filter);
+    : alerts.filter(alert => alert.severity === filter);
 
-  const severityCounts = alerts?.reduce((acc, alert) => {
-    acc[alert.severity] = (acc?.[alert?.severity] || 0) + 1;
+  const severityCounts = alerts.reduce((acc, alert) => {
+    acc[alert.severity] = (acc[alert.severity] || 0) + 1;
     return acc;
   }, {});
 
