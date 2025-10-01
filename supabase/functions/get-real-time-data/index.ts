@@ -56,7 +56,17 @@ serve(async (req) => {
       .limit(5);
     if (alertsError) throw alertsError;
 
-    // --- 5. Assemble the final data payload ---
+    // --- 5. Get System Status (Simulated) ---
+    const systemStatus = {
+        webSocket: { status: 'connected', latency: 45 + Math.floor(Math.random() * 20) },
+        database: { status: 'healthy', responseTime: 120 + Math.floor(Math.random() * 50) },
+        paymentGateway: { status: 'healthy', uptime: 99.9 },
+        gameEngine: { status: 'warning', load: 85 + Math.floor(Math.random() * 10) },
+        monitoring: { lastUpdate: new Date().toISOString() }
+    };
+    const connectionStatus = 'connected';
+
+    // --- 6. Assemble the final data payload ---
     const responsePayload = {
       kpiData: {
         activePlayers: { value: kpiData?.active_players, change: '+1.2%', changeType: 'positive' },
@@ -93,7 +103,9 @@ serve(async (req) => {
         source: a.source,
         acknowledged: false,
         actions: ['Investigate', 'Acknowledge']
-      }))
+      })),
+      systemStatus,
+      connectionStatus
     };
 
     return new Response(JSON.stringify(responsePayload), {

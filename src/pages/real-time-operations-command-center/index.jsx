@@ -159,7 +159,10 @@ const RealTimeOperationsCommandCenter = () => {
         </div>
       </main>
       {/* System Status Indicator */}
-      <SystemStatusIndicator />
+      <SystemStatusIndicator
+        systemStatus={dashboardData?.systemStatus}
+        connectionStatus={dashboardData?.connectionStatus}
+      />
     </div>
   );
 };

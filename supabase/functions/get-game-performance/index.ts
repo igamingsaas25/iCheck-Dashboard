@@ -43,14 +43,26 @@ serve(async (req) => {
     const revenuePerGame = totalRevenue / totalGames;
 
     const metrics = {
-      totalGames,
-      totalGamesTrend: 5.1, // Placeholder trend
-      avgRtp,
-      avgRtpTrend: 1.2,
-      peakPlayers,
-      peakPlayersTrend: 10.3,
-      revenuePerGame,
-      revenuePerGameTrend: 8.9
+      totalGames: {
+        value: totalGames,
+        trend: 5.1, // Placeholder trend
+        sparklineData: [totalGames - 5, totalGames - 2, totalGames + 1, totalGames] // Simulated
+      },
+      avgRtp: {
+        value: avgRtp,
+        trend: 1.2,
+        sparklineData: [avgRtp - 1, avgRtp + 0.5, avgRtp - 0.2, avgRtp] // Simulated
+      },
+      peakPlayers: {
+        value: peakPlayers,
+        trend: 10.3,
+        sparklineData: [peakPlayers - 500, peakPlayers - 200, peakPlayers + 100, peakPlayers] // Simulated
+      },
+      revenuePerGame: {
+        value: revenuePerGame,
+        trend: 8.9,
+        sparklineData: [revenuePerGame * 0.9, revenuePerGame * 1.1, revenuePerGame * 0.95, revenuePerGame] // Simulated
+      }
     };
 
     // --- 3. Format the game list for the UI components ---

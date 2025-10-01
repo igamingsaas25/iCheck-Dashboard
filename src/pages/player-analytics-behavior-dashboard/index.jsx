@@ -10,56 +10,7 @@ import EngagementMatrix from './components/EngagementMatrix';
 import AdvancedFilterPanel from './components/AdvancedFilterPanel';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
-
-// This function simulates a real API call to fetch all data for this dashboard
-const fetchPlayerAnalyticsData = async (filters) => {
-    // In a real application, this would be an actual fetch call:
-    // const response = await fetch(`/api/player-analytics?filters=${JSON.stringify(filters)}`);
-    // const data = await response.json();
-    // return data;
-
-    // For demonstration, we simulate the API response with mock data.
-    return {
-        playerMetrics: {
-            acquisition: { value: 2847, change: '+12.3%' },
-            retention: { value: 0.684, change: '+2.1%' },
-            avgSession: { value: '24.6m', change: '-1.2m' },
-            ltv: { value: 487.20, change: '+$23.40' }
-        },
-        journeyFunnel: {
-            funnel: [
-                { name: 'Registration', value: 10000, fill: '#3B82F6', percentage: 100, description: 'New player signups' },
-                { name: 'First Deposit', value: 6800, fill: '#8B5CF6', percentage: 68, description: 'Made initial deposit' },
-                { name: 'Active Player', value: 4500, fill: '#10B981', percentage: 45, description: '7+ days activity' }
-            ],
-            cohort: [
-                { week: 'Week 1', retention: 100, players: 1000 },
-                { week: 'Week 4', retention: 45, players: 450 },
-                { week: 'Week 12', retention: 28, players: 280 }
-            ]
-        },
-        distribution: {
-            geographic: [
-                { region: 'North America', players: 12847, percentage: 35.2, growth: '+8.3%', color: '#3B82F6' },
-                { region: 'Europe', players: 9632, percentage: 26.4, growth: '+12.1%', color: '#8B5CF6' }
-            ],
-            timezone: [
-                { timezone: 'UTC-8 (PST)', players: 8945, peak: '8:00 PM', activity: 92 },
-                { timezone: 'UTC+0 (GMT)', players: 6421, peak: '10:00 PM', activity: 85 }
-            ]
-        },
-        engagement: {
-            bubble: [
-                { gameType: 'Slots', engagement: 85, revenue: 450, playerCount: 12500, avgSession: 28, demographics: 'Mixed Age Groups', color: '#3B82F6' },
-                { gameType: 'Poker', engagement: 78, revenue: 520, playerCount: 4500, avgSession: 45, demographics: '30-50 Years', color: '#F59E0B' }
-            ],
-            heatmap: [
-                { ageGroup: '18-25', slots: 90, blackjack: 45, sports: 95 },
-                { ageGroup: '36-45', slots: 80, blackjack: 85, sports: 75 }
-            ]
-        }
-    };
-};
+import { supabase } from '../../utils/supabaseClient';
 
 const PlayerAnalyticsBehaviorDashboard = () => {
   const [globalFilters, setGlobalFilters] = useState({});
@@ -68,15 +19,21 @@ const PlayerAnalyticsBehaviorDashboard = () => {
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const getData = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
-        const data = await fetchPlayerAnalyticsData({ ...globalFilters, ...advancedFilters });
+        const { data, error } = await supabase.functions.invoke('get-player-analytics', {
+            body: { filters: { ...globalFilters, ...advancedFilters } },
+        });
+        if (error) throw error;
         setDashboardData(data);
         setLastUpdated(new Date());
-    } catch (error) {
-        console.error("Failed to fetch player analytics data:", error);
+    } catch (err) {
+        console.error("Failed to fetch player analytics data:", err);
+        setError("Failed to load player analytics data. Please try again.");
     } finally {
         setIsLoading(false);
     }

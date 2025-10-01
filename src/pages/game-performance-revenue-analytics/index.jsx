@@ -9,34 +9,7 @@ import GameScatterPlot from './components/GameScatterPlot';
 import GameLeaderboard from './components/GameLeaderboard';
 import GamePerformanceMatrix from './components/GamePerformanceMatrix';
 import GameFilterControls from './components/GameFilterControls';
-
-// This function simulates a real API call to fetch all data for this dashboard
-const fetchGamePerformanceData = async (filters) => {
-    // In a real application, this would be an actual fetch call:
-    // const response = await fetch(`/api/game-performance?filters=${JSON.stringify(filters)}`);
-    // const data = await response.json();
-    // return data;
-
-    // For demonstration, we simulate the API response with mock data.
-    const mockGames = [
-        { id: 1, name: "Starburst", provider: "NetEnt", category: "Slots", volatility: "Low", revenue: 125000, rtp: 96.1, sessions: 15420, avgSession: 420, betFreq: 45, bonusRate: 12.5, retention: 78.2, trend: 8.5 },
-        { id: 2, name: "Mega Moolah", provider: "Microgaming", category: "Jackpot", volatility: "High", revenue: 98000, rtp: 88.1, sessions: 8920, avgSession: 680, betFreq: 32, bonusRate: 8.2, retention: 65.4, trend: -3.2 },
-        { id: 3, name: "Book of Dead", provider: "Play'n GO", category: "Slots", volatility: "High", revenue: 87500, rtp: 94.2, sessions: 12340, avgSession: 380, betFreq: 52, bonusRate: 15.8, retention: 72.1, trend: 12.3 },
-        { id: 4, name: "Lightning Roulette", provider: "Evolution Gaming", category: "Live Casino", volatility: "Medium", revenue: 156000, rtp: 97.3, sessions: 6780, avgSession: 920, betFreq: 28, bonusRate: 22.1, retention: 85.6, trend: 15.7 },
-        { id: 5, name: "Sweet Bonanza", provider: "Pragmatic Play", category: "Slots", volatility: "High", revenue: 112000, rtp: 96.5, sessions: 18650, avgSession: 340, betFreq: 58, bonusRate: 18.4, retention: 69.8, trend: 6.9 },
-    ];
-    const mockMetrics = {
-        totalGames: mockGames.length,
-        totalGamesTrend: 8.2,
-        avgRtp: mockGames.reduce((sum, game) => sum + game.rtp, 0) / mockGames.length,
-        avgRtpTrend: 2.1,
-        peakPlayers: Math.max(...mockGames.map(game => game.sessions)),
-        peakPlayersTrend: 15.3,
-        revenuePerGame: mockGames.reduce((sum, game) => sum + game.revenue, 0) / mockGames.length,
-        revenuePerGameTrend: 12.7
-    };
-    return { games: mockGames, metrics: mockMetrics };
-};
+import { supabase } from '../../utils/supabaseClient';
 
 const GamePerformanceRevenueAnalytics = () => {
   const [selectedGame, setSelectedGame] = useState(null);
@@ -44,14 +17,20 @@ const GamePerformanceRevenueAnalytics = () => {
   const [gameFilters, setGameFilters] = useState({});
   const [dashboardData, setDashboardData] = useState({ games: [], metrics: {} });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const getData = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
-        const data = await fetchGamePerformanceData({ ...globalFilters, ...gameFilters });
+        const { data, error } = await supabase.functions.invoke('get-game-performance', {
+            body: { filters: { ...globalFilters, ...gameFilters } },
+        });
+        if (error) throw error;
         setDashboardData(data);
-    } catch (error) {
-        console.error("Failed to fetch game performance data:", error);
+    } catch (err) {
+        console.error("Failed to fetch game performance data:", err);
+        setError("Failed to load game performance data. Please try again.");
     } finally {
         setIsLoading(false);
     }
