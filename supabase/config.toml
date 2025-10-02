@@ -1,0 +1,14 @@
+# Supabase Project Configuration
+
+# Define the schedules for the aggregation functions.
+# This uses standard cron syntax.
+
+[functions.aggregate-live-data]
+# Runs every minute, every day.
+# This populates the `live_minute_summary` table for the real-time dashboard.
+schedule = "* * * * *"
+
+[functions.aggregate-daily-data]
+# Runs once every day at midnight UTC.
+# This populates the `daily_kpi_summary`, `daily_game_summary`, etc.
+schedule = "0 0 * * *"
